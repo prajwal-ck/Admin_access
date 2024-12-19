@@ -1,5 +1,5 @@
 {
-  "devCommand": "uvicorn Html_python:app",
+  "version": 2,
   "builds": [
     {
       "src": "Html_python.py",
