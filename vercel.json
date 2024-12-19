@@ -5,7 +5,15 @@
       "src": "app.py",
       "use": "@vercel/python",
       "config": {
-          "pythonVersion": "3.12"
+        "pythonVersion": "3.9",
+        "build": {
+          "env": {
+            "PIP_EXTRA_INDEX_URL": "https://pypi.org/simple"
+          },
+          "commands": [
+            "pip install fastapi uvicorn"
+          ]
+        }
       }
     }
   ],
