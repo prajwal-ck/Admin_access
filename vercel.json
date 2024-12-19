@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
         {
-            "source": "Html_python.py",
+            "source": "app.py",
             "use": "@vercel/python",
             "config": {
                 "pythonVersion": "3.12"
@@ -12,7 +12,7 @@
     "routes": [
         {
             "source": "/(.*)",
-            "destination": "Html_python.py"
+            "destination": "app.py"
         }
     ]
 }
