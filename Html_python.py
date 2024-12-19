@@ -19,5 +19,5 @@ def homepage():
         #     return HTMLResponse(content=f"<h2>Script execution failed!</h2><pre>{result.stderr}</pre>")
     except Exception as e:
         return HTMLResponse(content=f"<h2>An error occurred:</h2><pre>{str(e)}</pre>")
-# if __name__ == "__main__":
-#     main()cls
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
