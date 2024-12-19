@@ -16,3 +16,20 @@
         }
     ]
 }
+
+
+{
+  "devCommand": "uvicorn Html_python:app",
+  "builds": [
+    {
+      "src": "Html_python.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "Html_python.py"
+    }
+  ]
+}
