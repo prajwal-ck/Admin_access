@@ -16,7 +16,7 @@ def homepage():
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/run-script")
-def main():
+def run_script():
     try:
         # Execute the Python file and capture its output
         result = subprocess.run(
@@ -28,5 +28,3 @@ def main():
             return HTMLResponse(content=f"<h2>Script execution failed!</h2><pre>{result.stderr}</pre>")
     except Exception as e:
         return HTMLResponse(content=f"<h2>An error occurred:</h2><pre>{str(e)}</pre>")
-if __name__ == "__main__":
-    main()
