@@ -2,5 +2,5 @@ pandas
 python-dotenv
 langchain
 langchain-google-genai
-fastapi 
-uvicorn
+fastapi==0.111.0
+uvicorn==0.29.0
