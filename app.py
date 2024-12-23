@@ -1,22 +1,46 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from flask import Flask, render_template_string
 import process_request
-import uvicorn
-app = FastAPI()
 
-# Serve static files from the "static" directory
+app = Flask(__name__)
 
-@app.get("/")
+@app.route("/")
 def homepage():
     try:
+        # Execute the Python function and capture its output
         result = process_request.main()
-        # Execute the Python file and capture its output
-        # if result.returncode == 0:
-        return HTMLResponse(content=f"<h2>Script executed successfully!</h2><pre>{result}</pre>")
-        # else:
-        #     return HTMLResponse(content=f"<h2>Script execution failed!</h2><pre>{result.stderr}</pre>")
+        return render_template_string(
+            """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Script Execution</title>
+            </head>
+            <body>
+                <h2>Script executed successfully!</h2>
+                <pre>{{ result }}</pre>
+            </body>
+            </html>
+            """, result=result
+        )
     except Exception as e:
-        return HTMLResponse(content=f"<h2>An error occurred:</h2><pre>{str(e)}</pre>")
+        return render_template_string(
+            """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Script Execution</title>
+            </head>
+            <body>
+                <h2>An error occurred:</h2>
+                <pre>{{ error }}</pre>
+            </body>
+            </html>
+            """, error=str(e)
+        )
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000)
