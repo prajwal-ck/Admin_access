@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import requests
 import json 
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
