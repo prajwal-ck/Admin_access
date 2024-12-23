@@ -2,4 +2,3 @@ pandas
 python-dotenv 
 langchain
 langchain-google-genai 
-Flask
