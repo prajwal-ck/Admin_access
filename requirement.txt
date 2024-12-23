@@ -2,3 +2,4 @@ pandas
 python-dotenv 
 langchain
 langchain-google-genai 
+requests
