@@ -1,5 +1,7 @@
-pandas
-python-dotenv 
-langchain
-langchain-google-genai 
-requests
+os
+time
+requests==2.31.0
+json
+pandas==2.0.3
+langchain_google_genai==0.1.2
+python-dotenv==1.0.0
