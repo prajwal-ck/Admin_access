@@ -129,35 +129,23 @@ def main():
 
         # Process and classify data
         result = filter_and_classify(fetched_data, status_data)
-
-        # Extract Record_ID, Status, and Email for processed and rejected records
-        processed_records = [
+        # Combine Approved and Rejected Records into a single list
+        all_records = [
             {
                 "Record_ID": record["Record_ID"],
                 "Status": record["Status"],
                 "Email": record["Email"]
             }
-            for record in result["Approved_Records"]
+            for record in result["Approved_Records"] + result["Rejected_Records"]
         ]
 
-        rejected_records = [
-            {
-                "Record_ID": record["Record_ID"],
-                "Status": record["Status"],
-                "Email": record["Email"]
-            }
-            for record in result["Rejected_Records"]
-        ]
-
-        # Prepare the response
+        # Prepare the simplified response
         response = {
-            "message": "Access requests processed successfully!",
-            "Approved_Records": processed_records,
-            "Rejected_Records": rejected_records,
+            "result": all_records
         }
 
         # Print the response in JSON format to the console
-        print(json.dumps(response, indent=4))
+        # print(json.dumps(response, indent=4))
 
         # Return the response
         return response
