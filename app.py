@@ -10,7 +10,7 @@ def homepage():
     try:
         result = process_request.main()
         # Return the result in JSON format
-       return JSONResponse(content=result)
+        return JSONResponse(content=result)
     except Exception as e:
         # Return error details in JSON format
         return JSONResponse(content={"message": "An error occurred.", "error": str(e)}, status_code=500)
