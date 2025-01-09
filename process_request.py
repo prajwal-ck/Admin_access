@@ -1,60 +1,41 @@
 import os
-import pandas as pd
 import requests
+import pandas as pd
 import json 
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAI
-
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import uvicorn
+app = FastAPI()
 # Load environment variables
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Initialize FastAPI app
 # Initialize the LLM model
 model = GoogleGenerativeAI(model="gemini-pro", temperature=0.2)
 
-# API endpoint for fetching and updating data
-FETCH_URL = "https://sandbox.appsteer.io/services/mobile/Form/de69ba16-adf0-4bd5-bca3-c98723238815"
-UPDATE_URL = "https://sandbox.appsteer.io/services/mobile/Form/de69ba16-adf0-4bd5-bca3-c98723238815"
-
-# Headers including Authorization
+# record_id = '63690673-ebd7-4d35-bebf-b1ab563d81ea'
+Fecth_one = "https://sandbox.appsteer.io/services/mobile/SubmittedRecord?recordId={record_id}&timezone=Asia/Calcutta"
 HEADERS = {
  "X-AUTH-TOKEN":"d0accf3f-5f92-41c6-bb8b-c54b9c8d3896",
  "Content-Type": "application/json"
 }
 
-## Core Logic Functions ##
-
-def fetch_data():
+def fetch_data(record_id):
     try:
-        response = requests.get(FETCH_URL, headers=HEADERS)
+        fetch_url = f"{Fecth_one}/{record_id}"
+        response = requests.get(fetch_url, headers=HEADERS)
         if response.status_code == 200:
             data = response.json()
-            today_date = datetime.now().strftime("%Y-%m-%d")
-            filtered_records = [
-                record for record in data if record.get("DatePicker", "").startswith(today_date)
-            ]
-            if isinstance(data, list) and len(data) > 0:
-                data_list = []
-                for record in filtered_records:
-                    extracted_data = {
-                        "DatePicker": record.get("DatePicker"),
-                        "Name": record.get("Name"),
-                        "Email": record.get("Email"),
-                        "Managername": record.get("Managername"),
-                        "GrowthManagerEmail": record.get("GrowthManagerEmail"),
-                        "Requests": record.get("Requests"),
-                        "Record_ID": record.get("__recordId"),
-                        "Status": record.get("Status")
-                    }
-                    data_list.append(extracted_data)
-                return data_list
+            req_data = data['UserFormDataRequest']['UserFormData']['FormDataRequest']['FormData'][-3]['value'][0]
+            # print(req_data)
+            return req_data
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while fetching data: {e}")
         return []
-     
-def classify_access_request(request_text: str):
+        
+def classify_access_request(request_text):
     prompt = f"""
     ## INSTRUCTION ##
     You are X person, an AI administrator/ IT operations at iSteer and You have a 10 years of Experience.
@@ -64,94 +45,107 @@ def classify_access_request(request_text: str):
     Only allow the Authorised Software required for IT consulting companies. Else Reject all the requests.
     Give Output only as Rejected or Approved.
     Do not provide a preamble 
-
+	
     ### PERMISSION INPUT ###
     {request_text}
     """
     response = model.predict(prompt)
     return response.strip()
 
-def filter_and_classify(data_list, status_data):
-    filtered_data = []  # To store valid requests for processing
-    rejected_data = []  # To store rejected requests
 
-    for record in data_list:
-        email = record.get("Email")
-        date_picker = record.get("DatePicker")
+def process_record(record_id, Status):
+    """
+    Process the record by sending a POST request with updated data.
+    """
+    url = f"{Fecth_one}/update"
+    fetch = fetch_data()
+    Status = classify_access_request(fetch)
+    # url = "https://sandbox.appsteer.io/services/mobile/SaveUserForm"
+    payload = json.dumps({
+                    "UserFormDataRequest": {
+                        "UserFormData": {
+                        "FormDataRequest": {
+                            "FormData": [
+                            {
+                                "FormViewID": 5675,
+                                "HeaderID": 7965,
+                                "FieldID": 50484,
+                                "FieldLabel":"Status",
+                                "value": [Status],
+                                "UIType": 0,
+                                "UserFormData": None,
+                                "FieldIdentifier": "Status",
+                                "FieldUUID": "6095fd6a-c5fc-4d1d-aeb2-c0291b5a1f5d",
+                                "HeaderUUID": "d6739ea2-51e7-4948-a25e-4699d217bd5e",
+                                "ViewUUID": "7313719e-b19f-40f6-8546-93bdaee89837"
+                            }
+                            ],
+                            "ViewData": [
+                            {
+                                "CaptureTime": "2025-01-07 04:55:30",
+                                "FormViewID": 5675,
+                                "Latitude": "",
+                                "Longitude": ""
+                            }
+                            ]
+                        },
+                        "RecordID": record_id,
+                        "ListDisplayFields": None,
+                        "FormID": 2979,
+                        "ProfileUUID": None,
+                        "Moment": "2025-01-07 04:55:50",
+                        "MenuId": 0,
+                        "DeviceId": None,
+                        "version": "00.00.001",
+                        "RecordCurrStatus": 0,
+                        "FormUUID": "d92c0300-7208-4c88-9042-297a076ddd02",
+                        "isUTC": True,
+                        "TimeZone": "Asia/Calcutta",
+                        "Offset": 19800
+                        }
+                    }
+                    })          
 
-        # Skip records without valid timestamps
-        if not date_picker:
-            continue
-
-        request_time = datetime.strptime(date_picker, "%Y-%m-%d %H:%M:%S")
-
-        # Check if the request already exists in the status data
-        if email in status_data["Email"].values:
-            existing_record = status_data[status_data["Email"] == email]
-            last_request_time = datetime.strptime(
-                existing_record["DatePicker"].values[0], "%Y-%m-%d %H:%M:%S"
-            )
-
-            # If the new request is raised within 8 hours of the last request, reject it
-            if (request_time - last_request_time) <= timedelta(hours=8):
-                record["Status"] = "Rejected"
-                rejected_data.append(record)
-                continue
-
-        # If not raised within 8 hours or a completely new request, classify it
-        record["Status"] = classify_access_request(record.get("Requests"))
-        filtered_data.append(record)
-
-    # Combine rejected and classified records, and save to CSV
-    updated_data = pd.concat(
-        [status_data, pd.DataFrame(rejected_data + filtered_data)], ignore_index=True
-    )
-    updated_data.to_csv("AdminAccess_data.csv", index=False)
-
-    return {"Approved_Records": filtered_data, "Rejected_Records": rejected_data}
-
+    response = requests.request("POST", url, headers=HEADERS, data=payload)
+    return response.text
 
 def main():
     try:
-        # Fetch data from external API
-        fetched_data = fetch_data()
-        if not fetched_data:
-            return {"message": "No data fetched from external API."}
-
-        # Load status history or initialize
-        try:
-            status_data = pd.read_csv("Statusdata.csv")
-        except FileNotFoundError:
-            status_data = pd.DataFrame(columns=[
-                "DatePicker", "Name", "Email", "Managername", 
-                "GrowthManagerEmail", "Requests", "Record_ID", "Status"
-            ])
-
-        # Process and classify data
-        result = filter_and_classify(fetched_data, status_data)
-        # Combine Approved and Rejected Records into a single list
-        all_records = [
-            {
-                "Record_ID": record["Record_ID"],
-                "Status": record["Status"],
-                "Email": record["Email"]
-            }
-            for record in result["Approved_Records"] + result["Rejected_Records"]
-        ]
-
-        # Prepare the simplified response
-        response = {
-            "result": all_records
-        }
-
-        # Print the response in JSON format to the console
-        # print(json.dumps(response, indent=4))
-
-        # Return the response
-        return response
-
+        fetch = fetch_data()
+        Status = classify_access_request(fetch)
+         # Process the record
+        result = process_record(record_id, Status)
+        return result
     except Exception as e:
         error_response = {"message": f"An error occurred: {e}"}
         print(json.dumps(error_response, indent=4))
-        return error_response
+        return error_response 
     
+
+@app.get("/{record_id}")
+def handle_record(record_id: str = Path(..., description="The ID of the record to process")): 
+     try:
+        # Fetch data using the provided record_id
+        fetched_data = fetch_data(record_id)
+        if not fetched_data:
+            return JSONResponse(
+                content={"message": "Failed to fetch data for the record ID."},
+                status_code=400,
+            )
+
+        # Classify the request status
+        status = classify_access_request(fetched_data)
+
+        # Process the record with the classified status
+        result = process_record(record_id, status)
+        return JSONResponse(content={"message": "Record processed successfully.", "result": result})
+    except Exception as e:
+        return JSONResponse(
+            content={"message": "An error occurred.", "error": str(e)},
+            status_code=500,
+        )
+
+
+if __name__ == "__main__":
+    # Run the Uvicorn server to serve the FastAPI app
+    uvicorn.run(app)
