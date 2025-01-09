@@ -126,7 +126,7 @@ def main():
 def handle_record(encoded_record_id: str = Path(..., description="The encoded record ID in format [\"record_id\"]")): 
      try:
         # Fetch data using the provided record_id
-        fetched_data = fetch_data(record_id)
+        fetched_data = fetch_data(encoded_record_id)
         if not fetched_data:
             return JSONResponse(
                 content={"message": "Failed to fetch data for the record ID."},
