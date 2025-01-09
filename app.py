@@ -109,7 +109,7 @@ def process_record(record_id, Status):
     response = requests.request("POST", url, headers=HEADERS, data=payload)
     return response.text
 
-def main():
+def main(record_id):
     try:
         fetch = fetch_data()
         Status = classify_access_request(fetch)
