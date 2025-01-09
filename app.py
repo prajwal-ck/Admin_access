@@ -127,7 +127,7 @@ def main(record_id):
 
 @app.get('https://admin-access.onrender.com/[/"{encoded_record_id}/"]')
 def handle_record(encoded_record_id): 
-#  try:
+    print(1)
     fetched_data = fetch_data(encoded_record_id)
     if not fetched_data:
         return JSONResponse(
