@@ -139,7 +139,7 @@ def handle_record(record_id: str = Path(..., description="The ID of the record t
         # Process the record with the classified status
         result = process_record(record_id, status)
         return JSONResponse(content={"message": "Record processed successfully.", "result": result})
-    except Exception as e:
+     except Exception as e:
         return JSONResponse(
             content={"message": "An error occurred.", "error": str(e)},
             status_code=500,
