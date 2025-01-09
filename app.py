@@ -4,7 +4,7 @@ import pandas as pd
 import json 
 from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAI
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, HTTPException
 from fastapi.responses import JSONResponse
 import uvicorn
 app = FastAPI()
@@ -125,8 +125,13 @@ def main():
 @app.get("/{encoded_record_id}")
 def handle_record(encoded_record_id: str = Path(..., description="The encoded record ID in format [\"record_id\"]")): 
      try:
+	# Extract the record ID from the encoded format
+        if not (encoded_record_id.startswith('["') and encoded_record_id.endswith('"]')):
+            raise HTTPException(status_code=400, detail="Invalid record ID format.")
+        
+        record_id = encoded_record_id[2:-2]
         # Fetch data using the provided record_id
-        fetched_data = fetch_data(encoded_record_id)
+        fetched_data = fetch_data(record_id)
         if not fetched_data:
             return JSONResponse(
                 content={"message": "Failed to fetch data for the record ID."},
