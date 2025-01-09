@@ -126,8 +126,8 @@ def main():
 def handle_record(encoded_record_id: str = Path(..., description="The encoded record ID in format [\"record_id\"]")): 
      try:
 	# Extract the record ID from the encoded format
-        if not (encoded_record_id.startswith('["') and encoded_record_id.endswith('"]')):
-            raise HTTPException(status_code=400, detail="Invalid record ID format.")
+        if not (encoded_record_id.startswith('[\"') and encoded_record_id.endswith('\"]')):
+            raise HTTPException(status_code=400, detail="Invalid record ID format [\"record_id\"].")
         
         record_id = encoded_record_id[2:-2]
         # Fetch data using the provided record_id
