@@ -7,6 +7,7 @@ from langchain_google_genai import GoogleGenerativeAI
 from fastapi import FastAPI, Path, HTTPException
 from fastapi.responses import JSONResponse
 import uvicorn
+
 app = FastAPI()
 # Load environment variables
 load_dotenv()
@@ -15,25 +16,24 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # Initialize the LLM model
 model = GoogleGenerativeAI(model="gemini-pro", temperature=0.2)
 
-# record_id = '63690673-ebd7-4d35-bebf-b1ab563d81ea'
-Fecth_one = "https://sandbox.appsteer.io/services/mobile/SubmittedRecord?recordId={record_id}&timezone=Asia/Calcutta"
-HEADERS = {
- "X-AUTH-TOKEN":"d0accf3f-5f92-41c6-bb8b-c54b9c8d3896",
- "Content-Type": "application/json"
-}
 
 def fetch_data(record_id):
-    try:
-        fetch_url = f"{Fecth_one}/{record_id}"
-        response = requests.get(fetch_url, headers=HEADERS)
-        if response.status_code == 200:
-            data = response.json()
-            req_data = data['UserFormDataRequest']['UserFormData']['FormDataRequest']['FormData'][-3]['value'][0]
-            # print(req_data)
-            return req_data
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data: {e}")
-        return []
+    # try:
+        # record_id = '63690673-ebd7-4d35-bebf-b1ab563d81ea'
+    Fecth_one = f"https://sandbox.appsteer.io/services/mobile/SubmittedRecord?recordId={record_id}&timezone=Asia/Calcutta"
+    HEADERS = {
+    "X-AUTH-TOKEN":"d0accf3f-5f92-41c6-bb8b-c54b9c8d3896",
+    "Content-Type": "application/json"
+    }
+    response = requests.get(Fecth_one, headers=HEADERS)
+    if response.status_code == 200:
+        data = response.json()
+        req_data = data['UserFormDataRequest']['UserFormData']['FormDataRequest']['FormData'][-3]['value'][0]
+        # print(req_data)
+        return req_data
+    # except requests.exceptions.RequestException as e:
+    #     print(f"An error occurred while fetching data: {e}")
+    #     return []
         
 def classify_access_request(request_text):
     prompt = f"""
@@ -57,10 +57,12 @@ def process_record(record_id, Status):
     """
     Process the record by sending a POST request with updated data.
     """
-    url = f"{Fecth_one}/update"
-    fetch = fetch_data()
-    Status = classify_access_request(fetch)
-    # url = "https://sandbox.appsteer.io/services/mobile/SaveUserForm"
+    Fecth_one = f"https://sandbox.appsteer.io/services/mobile/SubmittedRecord?recordId={record_id}&timezone=Asia/Calcutta"
+    Post_url = "https://sandbox.appsteer.io/services/mobile/SaveUserForm"
+    HEADERS = {
+    "X-AUTH-TOKEN":"d0accf3f-5f92-41c6-bb8b-c54b9c8d3896",
+    "Content-Type": "application/json"
+    }
     payload = json.dumps({
                     "UserFormDataRequest": {
                         "UserFormData": {
@@ -106,49 +108,43 @@ def process_record(record_id, Status):
                     }
                     })          
 
-    response = requests.request("POST", url, headers=HEADERS, data=payload)
+    response = requests.request("POST", Post_url, headers=HEADERS, data=payload)
     return response.text
 
 def main(record_id):
-    try:
-        fetch = fetch_data()
-        Status = classify_access_request(fetch)
-         # Process the record
-        result = process_record(record_id, Status)
-        return result
-    except Exception as e:
-        error_response = {"message": f"An error occurred: {e}"}
-        print(json.dumps(error_response, indent=4))
-        return error_response 
+    # try:
+    fetch = fetch_data()
+    Status = classify_access_request(fetch)
+
+        # Process the record
+    result = process_record(record_id, Status)
+    return result
+    # except Exception as e:
+    #     error_response = {"message": f"An error occurred: {e}"}
+    #     print(json.dumps(error_response, indent=4))
+    #     return error_response 
     
 
-@app.get("/{encoded_record_id}")
-def handle_record(encoded_record_id: str = Path(..., description="The encoded record ID in format [\"record_id\"]")): 
-     try:
-	# Extract the record ID from the encoded format
-        if not (encoded_record_id.startswith('[\"') and encoded_record_id.endswith('\"]')):
-            raise HTTPException(status_code=400, detail="Invalid record ID format [\"record_id\"].")
-        
-        record_id = encoded_record_id[2:-2]
-        # Fetch data using the provided record_id
-        fetched_data = fetch_data(record_id)
-        if not fetched_data:
-            return JSONResponse(
-                content={"message": "Failed to fetch data for the record ID."},
-                status_code=400,
-            )
-
-        # Classify the request status
-        status = classify_access_request(fetched_data)
-
-        # Process the record with the classified status
-        result = process_record(record_id, status)
-        return JSONResponse(content={"message": "Record processed successfully.", "result": result})
-     except Exception as e:
+@app.get('/[/"{encoded_record_id}/"]')
+def handle_record(encoded_record_id): 
+#  try:
+    fetched_data = fetch_data(encoded_record_id)
+    if not fetched_data:
         return JSONResponse(
-            content={"message": "An error occurred.", "error": str(e)},
-            status_code=500,
+            content={"message": "Failed to fetch data for the record ID."},
+            status_code=400,
         )
+    # Classify the request status
+    status = classify_access_request(fetched_data)
+	
+    # Process the record with the classified status
+    result = process_record(record_id = encoded_record_id, Status=status)
+    return JSONResponse(content={"message": "Record processed successfully.", "result": result})
+#  except Exception as e:
+#     return JSONResponse(
+#         content={"message": "An error occurred.", "error": str(e)},
+#         status_code=500,
+#     )
 
 
 if __name__ == "__main__":
