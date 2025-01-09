@@ -4,7 +4,7 @@ import pandas as pd
 import json 
 from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAI
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from fastapi.responses import JSONResponse
 import uvicorn
 app = FastAPI()
