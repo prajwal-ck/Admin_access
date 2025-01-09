@@ -125,7 +125,7 @@ def main(record_id):
     #     return error_response 
     
 
-@app.get('/[/"{encoded_record_id}/"]')
+@app.get('https://admin-access.onrender.com/[/"{encoded_record_id}/"]')
 def handle_record(encoded_record_id): 
 #  try:
     fetched_data = fetch_data(encoded_record_id)
