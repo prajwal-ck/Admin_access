@@ -122,8 +122,8 @@ def main():
         return error_response 
     
 
-@app.get("/{record_id}")
-def handle_record(record_id: str = Path(..., description="The ID of the record to process")): 
+@app.get("/{encoded_record_id}")
+def handle_record(encoded_record_id: str = Path(..., description="The encoded record ID in format [\"record_id\"]")): 
      try:
         # Fetch data using the provided record_id
         fetched_data = fetch_data(record_id)
