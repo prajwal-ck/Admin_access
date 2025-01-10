@@ -125,7 +125,7 @@ def main(record_id):
     #     return error_response 
     
 
-@app.get('/[/"{encoded_record_id}/"]')
+@app.get('/{encoded_record_id}')
 def handle_record(encoded_record_id): 
     print(1)
     fetched_data = fetch_data(encoded_record_id)
@@ -139,7 +139,7 @@ def handle_record(encoded_record_id):
 	
     # Process the record with the classified status
     result = process_record(record_id = encoded_record_id, Status=status)
-    return JSONResponse(content={"message": "Record processed successfully.", "result": result})
+    return JSONResponse(content=result)
 #  except Exception as e:
 #     return JSONResponse(
 #         content={"message": "An error occurred.", "error": str(e)},
