@@ -14,7 +14,7 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Initialize the LLM model
-model = GoogleGenerativeAI(model="gemini-pro", temperature=0.2)
+model = GoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.2)
 
 
 def fetch_data(record_id):
