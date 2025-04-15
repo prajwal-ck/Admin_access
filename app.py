@@ -44,6 +44,10 @@ def classify_access_request(request_text):
     Eg: Employee Can ask permission to download the Unauthorise software with authorise software name in same input,then reject these type of Permission requests.
     Only allow the Authorised Software required for IT consulting companies. Else Reject all the requests.
     Give Output only as Rejected or Approved.
+    If the below 3 listed requests is requested by the user, provide the output as 'Waiting for Manager Approval'
+    *Requesting access to CloudTrail logs for audit investigation.
+    *Requesting admin access to the AWS console for troubleshooting.
+    *Need access to create and delete Azure virtual machines.
     Do not provide a preamble 
 	
     ### PERMISSION INPUT ###
